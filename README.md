@@ -1,32 +1,49 @@
+## CNSeq2TimeSpan
+此项目基于[zhanzecheng的Time_NLP](https://github.com/zhanzecheng/Time_NLP),并增添了时间域的输出。
+
+## Install
+```shell script
+pip install CNSeq2TimeSpan
+```
+
+## Examples
+```python
+from CNSeq2TimeSpan.TimeNormalizer import TimeNormalizer
+tn = TimeNormalizer()
+
+res = tn.parse(target=u'今年的财务报表交了吗')
+print(res)
+
+res = tn.parse(target=u'昨天刚写完，明天早上就交')
+print(res)
+```
+返回结果
+```json
+{
+	'timebase': '2019-11-21-15-3-58',
+	'word': ['今年'],
+	'type': 'timespan',
+	'timespan': [
+		['2019-01-01 00:00:00', '2019-12-31 23:59:59']
+	]
+}
+
+{
+	'timebase': '2019-11-21-8-3-58',
+	'word': ['昨天', '明天早上'],
+	'type': 'timespan',
+	'timespan': [
+		['2019-11-20 00:00:00', '2019-11-20 23:59:59'],
+		['2019-11-21 06:00:00', '2019-11-21 09:00:00']
+	]
+}
+```
+
 ## 简介
 Time-NLP的python3版本   
 python 版本https://github.com/sunfiyes/Time-NLPY  
 Java 版本https://github.com/shinyke/Time-NLP
-## 功能说明
-用于句子中时间词的抽取和转换  
-详情请见test.py
 
-    res = tn.parse(target=u'过十分钟') # target为待分析语句，timeBase为基准时间默认是当前时间
-    print(res)
-    res = tn.parse(target=u'2013年二月二十八日下午四点三十分二十九秒', timeBase='2013-02-28 16:30:29') # target为待分析语句，timeBase为基准时间默认是当前时间
-    print(res)
-    res = tn.parse(target=u'我需要大概33天2分钟四秒', timeBase='2013-02-28 16:30:29') # target为待分析语句，timeBase为基准时间默认是当前时间
-    print(res)
-    res = tn.parse(target=u'今年儿童节晚上九点一刻') # target为待分析语句，timeBase为基准时间默认是当前时间
-    print(res)
-    res = tn.parse(target=u'2个小时以前') # target为待分析语句，timeBase为基准时间默认是当前时间
-    print(res)
-    res = tn.parse(target=u'晚上8点到上午10点之间') # target为待分析语句，timeBase为基准时间默认是当前时间
-    print(res)
-返回结果：
-
-    {"timedelta": "0 days, 0:10:00", "type": "timedelta"}
-    {"timestamp": "2013-02-28 16:30:29", "type": "timestamp"}
-    {"type": "timedelta", "timedelta": {"year": 0, "month": 1, "day": 3, "hour": 0, "minute": 2, "second": 4}}
-    {"timestamp": "2018-06-01 21:15:00", "type": "timestamp"}
-    {"error": "no time pattern could be extracted."}
-    {"type": "timespan", "timespan": ["2018-03-16 20:00:00", "2018-03-16 10:00:00"]}
-    
 ## 使用方式 
 demo：python3 Test.py
 

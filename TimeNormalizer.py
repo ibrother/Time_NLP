@@ -19,6 +19,7 @@ class TimeNormalizer:
     def __init__(self, isPreferFuture=True):
         self.isPreferFuture = isPreferFuture
         self.pattern, self.holi_solar, self.holi_lunar = self.init()
+        self.wordNeed2beChanged = []
 
     # 这里对一些不规范的表达做转换
     def _filter(self, input_query):
@@ -90,12 +91,13 @@ class TimeNormalizer:
         self.oldTimeBase = self.timeBase
         self.__preHandling()
         self.timeToken = self.__timeEx()
+
         dic = {}
         res = self.timeToken
-
+        dic['word'] = self.wordNeed2beChanged
         if self.isTimeSpan:
             if self.invalidSpan:
-                dic['error'] = 'no time pattern could be extracted.'
+                dic['type'] = 'error'
             else:
                 result = {}
                 dic['type'] = 'timedelta'
@@ -115,15 +117,29 @@ class TimeNormalizer:
                 result['second'] = int(time[2])
                 dic['timedelta'] = result
         else:
+            dic['timebase'] = self.timeBase
+            dic['timespan'] = []
+            # dic['timestamp'] = [res[0].time.format("YYYY-MM-DD HH:mm:ss")]
             if len(res) == 0:
-                dic['error'] = 'no time pattern could be extracted.'
-            elif len(res) == 1:
-                dic['type'] = 'timestamp'
-                dic['timestamp'] = res[0].time.format("YYYY-MM-DD HH:mm:ss")
+                dic['type'] = 'error'
+            # elif len(res) == 1:
+            #     if res[0].time_span:
+            #         if isinstance(res[0].time_span, list):
+            #             dic['timespan'].append(self.__dist2Span(res[0].time_span,res[0].time))
+            #         elif isinstance(res[0].time_span, str):
+            #             dic['timespan'].append(self.__str2Span(res[0].time_span,res[0].time))
+            #     dic['type'] = 'timestamp'
+
             else:
                 dic['type'] = 'timespan'
-                dic['timespan'] = [res[0].time.format("YYYY-MM-DD HH:mm:ss"), res[1].time.format("YYYY-MM-DD HH:mm:ss")]
-        return json.dumps(dic)
+                for r in res:
+                    if r.time_span:
+                        if isinstance(r.time_span, list):
+                            dic['timespan'].append(self.__dist2Span(r.time_span, r.time))
+                        elif isinstance(r.time_span, str):
+                            dic['timespan'].append(self.__str2Span(r.time_span, r.time))
+                # dic['timespan'] = [res[0].time.format("YYYY-MM-DD HH:mm:ss"), res[1].time.format("YYYY-MM-DD HH:mm:ss")]
+        return dic
 
     def __preHandling(self):
         """
@@ -159,8 +175,9 @@ class TimeNormalizer:
         res = []
         # 时间上下文： 前一个识别出来的时间会是下一个时间的上下文，用于处理：周六3点到5点这样的多个时间的识别，第二个5点应识别到是周六的。
         contextTp = TimePoint()
-        print(self.timeBase)
-        print('temp',temp)
+        # print(self.timeBase)
+        # print('temp',temp)
+        self.wordNeed2beChanged = temp
         for i in range(0, rpointer):
             # 这里是一个类嵌套了一个类
             res.append(TimeUnit(temp[i], self, contextTp))
@@ -185,3 +202,38 @@ class TimeNormalizer:
             if tu.time.timestamp != 0:
                 res.append(tu)
         return res
+
+    def __str2Span(self, time_span, time):
+        return [time.floor(time_span).format("YYYY-MM-DD HH:mm:ss"),time.ceil(time_span).format("YYYY-MM-DD HH:mm:ss")]
+
+    def __dist2Span(self, time_dist, time):
+        if time_dist[0] == 0:
+            return [time.replace(year=time_dist[1]).format("YYYY-MM-DD HH:mm:ss"),
+                    time.replace(year=time_dist[2]).format("YYYY-MM-DD HH:mm:ss")]
+        elif time_dist[0] == 1:
+            return [time.replace(month=time_dist[1]).format("YYYY-MM-DD HH:mm:ss"),
+                    time.replace(month=time_dist[2]).format("YYYY-MM-DD HH:mm:ss")]
+        elif time_dist[0] == 2:
+            return [time.replace(day=time_dist[1]).format("YYYY-MM-DD HH:mm:ss"),
+                    time.replace(day=time_dist[2]).format("YYYY-MM-DD HH:mm:ss")]
+        elif time_dist[0] == 3:
+            if time_dist[1]==24:
+                if time_dist[2] == 24:
+                    return [time.replace(hour=23, minute=59, second=59).format("YYYY-MM-DD HH:mm:ss"),
+                            time.replace(hour=23, minute=59, second=59).format("YYYY-MM-DD HH:mm:ss")]
+                else:
+                    return [time.replace(hour=23, minute=59, second=59).format("YYYY-MM-DD HH:mm:ss"),
+                            time.replace(hour=time_dist[2]).format("YYYY-MM-DD HH:mm:ss")]
+            else:
+                if time_dist[2] == 24:
+                    return [time.replace(hour=time_dist[1]).format("YYYY-MM-DD HH:mm:ss"),
+                            time.replace(hour=23, minute=59, second=59).format("YYYY-MM-DD HH:mm:ss")]
+                else:
+                    return [time.replace(hour=time_dist[1]).format("YYYY-MM-DD HH:mm:ss"),
+                            time.replace(hour=time_dist[2]).format("YYYY-MM-DD HH:mm:ss")]
+        elif time_dist[0] == 4:
+            return [time.replace(minute=time_dist[1]).format("YYYY-MM-DD HH:mm:ss"),
+                    time.replace(minute=time_dist[2]).format("YYYY-MM-DD HH:mm:ss")]
+        elif time_dist[0] == 5:
+            return [time.replace(second=time_dist[1]).format("YYYY-MM-DD HH:mm:ss"),
+                    time.replace(second=time_dist[2]).format("YYYY-MM-DD HH:mm:ss")]
