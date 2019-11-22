@@ -11,9 +11,55 @@ import arrow
 
 tn = TimeNormalizer()
 
-res = tn.parse(target=u'晚上八点到上午九点，明天中午给我') # target为待分析语句，timeBase为基准时间默认是当前时间
+res = tn.parse(target=u'今天白天去逛庙会，晚上九点半回去要洗澡,明天白天起来还要开会') # target为待分析语句，timeBase为基准时间默认是当前时间
 print(res)
+#
+# import time
+# start = arrow.now()
+# time.sleep(1)
+# end = arrow.now()
+# print((start > end))
 
+
+# def recovertSetence(origin, after, word_dist):
+#     class wordDist:
+#         def __init__(self, word, start, end):
+#             self.word = word
+#             self.start = start
+#             self.end = end
+#     word_se = []
+#     # 计算每个word在转换后的字符串中的位置
+#     for w in word_dist:
+#         start = index_of_list(after, w)
+#         end = start + len(w)
+#         if start!= -1:
+#             word_se.append(wordDist(w, start, end))
+#     if len(word_se) > 1:
+#         word_se_temp = []
+#         # 如果word不止一个，合并其中连在一起的word
+#         for i in range(len(word_se) - 1):
+#             if word_se[i].end + 1 == word_se[i+1].start:
+#                 word_se_temp.append(wordDist(word_se[i].word+word_se[i+1].word, word_se[i].start, word_se[i+1].end))
+#             else:
+#                 word_se_temp.append(word_se[i])
+#
+#
+# def index_of_list( document, answer):
+#     '''
+#     判断答案是否在文本中（子字符串查询）
+#     :param document: 所检索的文本
+#     :param answer: 答案
+#     :return: 返回答案在文本中的开始位置，不在文本中则返回 -1
+#     '''
+#     n1 = len(document)
+#     n2 = len(answer)
+#     for i in range(n1 - n2 + 1):
+#         if document[i:i + n2] == answer:
+#             return i
+#     else:
+#         return -1
+#
+# print(recovertSetence("我三月二十周二去上海", "我3月20号周2去上海", ["3月20号","周2"]))
 # res = tn.parse(target=u'明天上午十点不上班') # target为待分析语句，timeBase为基准时间默认是当前时间
 # print(res)
 

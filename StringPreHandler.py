@@ -38,16 +38,32 @@ class StringPreHandler:
         :param target: 待转化的字符串
         :return: 转化完毕后的字符串
         """
+        class translatedWord():
+            def __init__(self, after, before, start, end):
+                self.after = after
+                self.before = before
+                self.start = start
+                self.end = end
+
+        translatedWords = []
         pattern = re.compile(u"[一二两三四五六七八九123456789]万[一二两三四五六七八九123456789](?!(千|百|十))")
         match = pattern.finditer(target)
         for m in match:
+
             group = m.group()
             s = group.split(u"万")
             s = list(filter(None, s))
             num = 0
             if len(s) == 2:
                 num += cls.wordToNumber(s[0]) * 10000 + cls.wordToNumber(s[1]) * 1000
+            translatedWords.append(translatedWord(
+                str(num),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1]
+            ))
             target = pattern.sub(str(num), target, 1)
+
 
         pattern = re.compile(u"[一二两三四五六七八九123456789]千[一二两三四五六七八九123456789](?!(百|十))")
         match = pattern.finditer(target)
@@ -59,6 +75,12 @@ class StringPreHandler:
             if len(s) == 2:
                 num += cls.wordToNumber(s[0]) * 1000 + cls.wordToNumber(s[1]) * 100
             target = pattern.sub(str(num), target, 1)
+            translatedWords.append(translatedWord(
+                str(num),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1])
+            )
 
         pattern = re.compile(u"[一二两三四五六七八九123456789]百[一二两三四五六七八九123456789](?!十)")
         match = pattern.finditer(target)
@@ -70,16 +92,35 @@ class StringPreHandler:
             if len(s) == 2:
                 num += cls.wordToNumber(s[0]) * 100 + cls.wordToNumber(s[1]) * 10
             target = pattern.sub(str(num), target, 1)
+            translatedWords.append(translatedWord(
+                str(num),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1])
+            )
 
         pattern = re.compile(u"[零一二两三四五六七八九]")
         match = pattern.finditer(target)
         for m in match:
+            translatedWords.append(translatedWord(
+                str(cls.wordToNumber(m.group())),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1])
+            )
             target = pattern.sub(str(cls.wordToNumber(m.group())), target, 1)
+
 
         pattern = re.compile(u"(?<=(周|星期))[末天日]")
         match = pattern.finditer(target)
         for m in match:
             target = pattern.sub(str(cls.wordToNumber(m.group())), target, 1)
+            translatedWords.append(translatedWord(
+                str(cls.wordToNumber(m.group())),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1]
+            ))
 
         pattern = re.compile(u"(?<!(周|星期))0?[0-9]?十[0-9]?")
         match = pattern.finditer(target)
@@ -93,6 +134,12 @@ class StringPreHandler:
             unit = cls.strToInt(s[1])
             num = ten * 10 + unit
             target = pattern.sub(str(num), target, 1)
+            translatedWords.append(translatedWord(
+                str(num),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1])
+            )
 
         pattern = re.compile(u"0?[1-9]百[0-9]?[0-9]?")
         match = pattern.finditer(target)
@@ -109,6 +156,12 @@ class StringPreHandler:
                 num += hundred * 100
                 num += int(s[1])
             target = pattern.sub(str(num), target, 1)
+            translatedWords.append(translatedWord(
+                str(num),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1])
+            )
 
         pattern = re.compile(u"0?[1-9]千[0-9]?[0-9]?[0-9]?")
         match = pattern.finditer(target)
@@ -125,6 +178,12 @@ class StringPreHandler:
                 num += thousand * 1000
                 num += int(s[1])
             target = pattern.sub(str(num), target, 1)
+            translatedWords.append(translatedWord(
+                str(num),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1])
+            )
 
         pattern = re.compile(u"[0-9]+万[0-9]?[0-9]?[0-9]?[0-9]?")
         match = pattern.finditer(target)
@@ -141,8 +200,14 @@ class StringPreHandler:
                 num += tenthousand * 10000
                 num += int(s[1])
             target = pattern.sub(str(num), target, 1)
+            translatedWords.append(translatedWord(
+                str(num),
+                target[m.span()[0]:m.span()[1]],
+                m.span()[0],
+                m.span()[1])
+            )
 
-        return target
+        return target, translatedWords
 
     @classmethod
     def wordToNumber(cls, s):
