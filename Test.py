@@ -7,12 +7,12 @@
 # @Changed : tianyuningmou
 
 from TimeNormalizer import TimeNormalizer # 引入包
-import arrow
+import json
 
 tn = TimeNormalizer()
 
-res = tn.parse(target=u'今天白天去逛庙会，晚上九点半回去要洗澡,明天白天起来还要开会') # target为待分析语句，timeBase为基准时间默认是当前时间
-print(res)
+res = tn.parse(target=u'九点今天白天去北京天安门') # target为待分析语句，timeBase为基准时间默认是当前时间
+print(json.dumps(res,ensure_ascii=False))
 #
 # import time
 # start = arrow.now()

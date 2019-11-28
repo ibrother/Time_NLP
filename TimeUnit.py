@@ -40,7 +40,7 @@ class TimeUnit:
         self.norm_setmonth()
         self.norm_setday()
         self.norm_setmonth_fuzzyday()
-        # self.norm_setBaseRelated()
+        self.norm_setBaseRelated()
         self.norm_setCurRelated()
         self.norm_sethour()
         self.norm_setminute()
@@ -190,8 +190,9 @@ class TimeUnit:
                 self.tp.tunit[2] = int(day)
                 # 处理倾向于未来时间的情况
                 self.preferFuture(1)
+                self.time_span = "day"
             self._check_time(self.tp.tunit)
-            self.time_span = "day"
+
 
     def norm_setday(self):
         """
@@ -546,8 +547,8 @@ class TimeUnit:
         设置以上文时间为基准的时间偏移计算
         :return:
         """
-        # print(self.exp_time)
-        cur = arrow.get(self.normalizer.timeBase, "YYYY-M-D-H-m-s")
+
+        cur = arrow.get(arrow.now().to(tz="Asia/shanghai"))
         flag = [False, False, False]
 
         rule = u"\\d+(?=天[以之]?前)"
@@ -763,7 +764,8 @@ class TimeUnit:
         :return:
         """
         # 这一块还是用了断言表达式
-        cur = arrow.get(self.normalizer.timeBase, "YYYY-M-D-H-m-s")
+        # 昨天、今天、明天等表述不需要调用前置时间，而是直接使用当前时刻的相对时间进行计算
+        cur = arrow.get(arrow.now().to(tz="Asia/shanghai"))
         flag = [False, False, False]
 
         rule = u"前年"

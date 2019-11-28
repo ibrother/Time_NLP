@@ -32,6 +32,8 @@ class TimeNormalizer:
         # 这里对于下个周末这种做转化 把个给移除掉
         input_query, translatedWords = StringPreHandler.numberTranslator(input_query)
 
+        translatedWords.reverse()
+
         rule = u"[0-9]月[0-9]"
         pattern = re.compile(rule)
         match = pattern.search(input_query)
@@ -47,7 +49,12 @@ class TimeNormalizer:
                 if match != None:
                     end = match.span()[1]
                     input_query = input_query[:end] + '号' + input_query[end:]
-                    translatedWords.append(translatedWord("号",""))
+                    if end > 0:
+                        translatedWords.append(translatedWord(input_query[end - 1:end] , input_query[end - 1:end]+ "号"))
+                        input_query = input_query[:end] + '号' + input_query[end:]
+                    elif end < len(input_query):
+                        translatedWords.append(translatedWord(input_query[end:end + 1], "号" + input_query[end:end + 1]))
+                        input_query = input_query[:end] + '号' + input_query[end:]
 
         rule = u"月"
         pattern = re.compile(rule)
@@ -124,7 +131,7 @@ class TimeNormalizer:
         }
         return pattern, holi_solar, holi_lunar
 
-    def parse(self, target, timeBase=arrow.now()):
+    def parse(self, target, timeBase=arrow.now().to(tz="Asia/shanghai")):
         """
         TimeNormalizer的构造方法，timeBase取默认的系统当前时间
         :param timeBase: 基准时间点
@@ -132,12 +139,12 @@ class TimeNormalizer:
         :return: 时间单元数组
         """
         self.origin = target
-        print("origin:",self.origin)
+        # print("origin:",self.origin)
         self.isTimeSpan = False
         self.invalidSpan = False
         self.timeSpan = ''
         self.target, self.translatedWords = self._filter(target)
-        print(self.target)
+        # print(self.target)
         self.timeBase = arrow.get(timeBase).format('YYYY-M-D-H-m-s')
         self.nowTime = timeBase
         self.oldTimeBase = self.timeBase
@@ -147,9 +154,8 @@ class TimeNormalizer:
         dic = {}
         res = self.timeToken
         words = self.wordNeed2beChanged
-        dic["word"] = []
         translatedWords = []
-
+        dic["word"] = []
         for t in self.translatedWords:
             translatedWords.append([t.before, t.after])
 
@@ -157,49 +163,36 @@ class TimeNormalizer:
         for w in words:
             wt = self.__recoveryWord(str(w), translatedWords, self.origin, 0)
             # print(wt)
-            dic["word"].append(wt)
+            dic["word"] .append(wt)
 
-
-
-        # if self.isTimeSpan:
-        #     if self.invalidSpan:
-        #         dic['type'] = 'error'
-        #     else:
-        #         result = {}
-        #         dic['type'] = 'timedelta'
-        #         dic['timedelta'] = self.timeSpan
-        #         # print(dic['timedelta'])
-        #         index = dic['timedelta'].find('days')
-        #
-        #         days = int(dic['timedelta'][:index-1])
-        #         result['year'] = int(days / 365)
-        #         result['month'] = int(days / 30 - result['year'] * 12)
-        #         result['day'] = int(days - result['year'] * 365 - result['month'] * 30)
-        #         index = dic['timedelta'].find(',')
-        #         time = dic['timedelta'][index+1:]
-        #         time = time.split(':')
-        #         result['hour'] = int(time[0])
-        #         result['minute'] = int(time[1])
-        #         result['second'] = int(time[2])
-        #         dic['timedelta'] = result
-        # else:
-        dic['timebase'] = self.timeBase
+        dic['timebase'] = arrow.get(timeBase).format('YYYY-MM-DD HH:mm:ss')
         dic['timespan'] = []
+        dic['timestamp'] = []
+
+        # for w in word:
+        #     res_w = self.parse(w)
+        #     if len(res_w) == 0:
+        #         continue
+        #     else:
+        #         dic["word"].append(w)
+        #         for r in res_w:
+        #             if r.time_span:
+        #                 dic['timestamp'].append(r.time.format("YYYY-MM-DD HH:mm:ss"))
+        #                 if isinstance(r.time_span, list):
+        #                     dic['timespan'].append(self.__dist2Span(r.time_span, r.time))
+        #                 elif isinstance(r.time_span, str):
+        #                     dic['timespan'].append(self.__str2Span(r.time_span, r.time))
+
+
         # dic['timestamp'] = [res[0].time.format("YYYY-MM-DD HH:mm:ss")]
         if len(res) == 0:
             dic['type'] = 'error'
-        # elif len(res) == 1:
-        #     if res[0].time_span:
-        #         if isinstance(res[0].time_span, list):
-        #             dic['timespan'].append(self.__dist2Span(res[0].time_span,res[0].time))
-        #         elif isinstance(res[0].time_span, str):
-        #             dic['timespan'].append(self.__str2Span(res[0].time_span,res[0].time))
-        #     dic['type'] = 'timestamp'
 
         else:
             dic['type'] = 'timespan'
             for r in res:
                 if r.time_span:
+                    dic['timestamp'].append(r.time.format("YYYY-MM-DD HH:mm:ss"))
                     if isinstance(r.time_span, list):
                         dic['timespan'].append(self.__dist2Span(r.time_span, r.time))
                     elif isinstance(r.time_span, str):
@@ -230,6 +223,7 @@ class TimeNormalizer:
         temp = []
         match = self.pattern.finditer(self.target)
         for m in match:
+            # print(m.group())
             startline = m.start()
             if startline == endline:
                 rpointer -= 1
@@ -328,4 +322,13 @@ class TimeNormalizer:
             elif word_yes in origin:
                 return word_yes
             else:
+                # print("gg")
                 return word
+
+    def __findWrongWord(self, word, origin, n):
+        if n >= len(word):
+            return -1
+        if not word[n] in origin:
+            return n
+        else:
+            self.__findWrongWord(word, origin.replace(), n+1)
