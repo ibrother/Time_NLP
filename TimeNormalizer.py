@@ -131,7 +131,7 @@ class TimeNormalizer:
         }
         return pattern, holi_solar, holi_lunar
 
-    def parse(self, target, timeBase=arrow.now().to(tz="Asia/shanghai")):
+    def parse(self, target, timeBase=arrow.now().to(tz="Asia/Shanghai")):
         """
         TimeNormalizer的构造方法，timeBase取默认的系统当前时间
         :param timeBase: 基准时间点
